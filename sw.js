@@ -2,6 +2,8 @@ const CACHE_NAME = 'planner-v1';
 const urlsToCache = [
   './',
   './planner.html',
+  './planner.css',
+  './planner.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
