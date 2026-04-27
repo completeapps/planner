@@ -98,6 +98,18 @@ body {
   color: var(--muted);
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-cluster {
+  display: flex;
+  align-items: center;
+}
+
+/* Theme toggle chip in header */
 .theme-toggle {
   border-radius: 999px;
   border: 1px solid rgba(180, 176, 166, 0.5);
@@ -108,6 +120,17 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  cursor: pointer;
+}
+
+/* Settings icon button */
+.settings-toggle {
+  border-radius: 999px;
+  border: 1px solid rgba(180, 176, 166, 0.5);
+  background: transparent;
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 0.9rem;
   cursor: pointer;
 }
 
@@ -129,23 +152,78 @@ body {
   cursor: pointer;
 }
 
-/* Settings panel */
-.settings-panel {
-  background: var(--paper);
+/* Settings side drawer */
+.settings-drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: 280px;
+  max-width: 80%;
+  background: var(--bg-elevated);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: -18px 0 50px rgba(0, 0, 0, 0.6);
+  transform: translateX(100%);
+  transition: transform 0.24s ease-out;
+  z-index: 40;
+}
+
+.settings-drawer.open {
+  transform: translateX(0);
+}
+
+.settings-drawer-inner {
+  padding: 16px 16px 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.settings-drawer-header h2 {
+  font-size: 1rem;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.settings-close {
+  border-radius: 999px;
+  border: 1px solid rgba(180, 176, 166, 0.5);
+  background: transparent;
+  color: var(--text);
+  padding: 4px 9px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* Backdrop */
+.settings-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out;
+  z-index: 30;
+}
+
+.settings-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Settings groups */
+.settings-group {
   border-radius: 18px;
   padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  margin-bottom: 10px;
-}
-
-.settings-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.settings-group {
-  flex: 1 1 160px;
+  background: var(--paper);
 }
 
 .settings-label {
@@ -564,6 +642,15 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .theme-toggle {
+    display: none; /* Rely on settings drawer on small screens */
   }
 
   .main-layout {
