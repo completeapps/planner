@@ -26,6 +26,8 @@
             <span id="themeIcon">☾</span>
             <span id="themeLabel">Dark</span>
           </button>
+          <span id="userLabel" class="user-label"></span>
+          <button id="authBtn" class="auth-btn" type="button">Sign in</button>
         </div>
       </header>
 
@@ -137,6 +139,63 @@
         console.error("Service worker registration failed", err);
       });
     }
+  </script>
+
+  <!-- Firebase Auth for Google sign-in -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB2n9yF-y2tx9CPalnFVVP1esgQmXqf9Hw",
+      authDomain: "complete-575d8.firebaseapp.com",
+      projectId: "complete-575d8",
+      storageBucket: "complete-575d8.firebasestorage.app",
+      messagingSenderId: "386287269951",
+      appId: "1:386287269951:web:fe62fed163c0735aa3a08a",
+      measurementId: "G-KBDDB2953K"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const userLabel = document.getElementById("userLabel");
+    const authBtn = document.getElementById("authBtn");
+
+    onAuthStateChanged(auth, (user) => {
+      if (!userLabel || !authBtn) return;
+      if (user) {
+        userLabel.textContent = user.displayName || user.email || "Signed in";
+        authBtn.textContent = "Sign out";
+      } else {
+        userLabel.textContent = "Not signed in";
+        authBtn.textContent = "Sign in";
+      }
+    });
+
+    authBtn?.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        try {
+          await signInWithPopup(auth, provider);
+        } catch (err) {
+          console.error("Sign-in failed", err);
+        }
+      } else {
+        try {
+          await signOut(auth);
+        } catch (err) {
+          console.error("Sign-out failed", err);
+        }
+      }
+    });
   </script>
 </body>
 </html>
