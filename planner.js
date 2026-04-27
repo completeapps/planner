@@ -2,27 +2,41 @@ const STORAGE_KEY = "complete-planner-tasks-v2";
 const CLASS_KEY = "complete-planner-classes-v2";
 const NOTES_KEY = "complete-planner-notes-v2";
 const THEME_KEY = "complete-planner-theme-v2";
+const DATE_FORMAT_KEY = "complete-planner-date-format"; // "mdy" or "dmy"
 
 let tasks = [];
 let classes = [];
 let selectedClass = null;
 
 // Date helpers
+function formatDateISO(date) {
+  return date.toISOString().slice(0, 10); // yyyy-mm-dd
+}
+
+function formatDateDisplay(date) {
+  const format = localStorage.getItem(DATE_FORMAT_KEY) || "mdy";
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  const y = date.getFullYear();
+
+  if (format === "dmy") {
+    return `${d}/${m}/${y}`;
+  }
+  return `${m}/${d}/${y}`;
+}
+
 function todayStr() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
+  return formatDateISO(new Date());
 }
 
 function tomorrowStr() {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
+  return formatDateISO(d);
 }
 
 function formatTodayLabel() {
-  const d = new Date();
-  const opts = { weekday: "long", month: "short", day: "numeric" };
-  return d.toLocaleDateString(undefined, opts);
+  return formatDateDisplay(new Date());
 }
 
 // Load state
@@ -70,7 +84,6 @@ function addClass() {
   if (!input) return;
   const name = input.value.trim();
   if (!name) return;
-
   if (!classes.includes(name)) {
     classes.push(name);
     saveClasses();
@@ -92,6 +105,7 @@ function renderClasses() {
 
   chips.innerHTML = "";
   select.innerHTML = "";
+
   const optNone = document.createElement("option");
   optNone.value = "";
   optNone.textContent = "No class";
@@ -125,17 +139,10 @@ function addTask() {
   const text = textInput.value.trim();
   if (!text) return;
 
-  const due = dueInput.value || null;
+  const due = dueInput.value || null; // yyyy-mm-dd from <input type="date">
   const className = classSelect.value || null;
 
-  tasks.push({
-    id: Date.now(),
-    text,
-    due,
-    className,
-    done: false
-  });
-
+  tasks.push({ id: Date.now(), text, due, className, done: false });
   textInput.value = "";
   saveTasks();
   renderTasks();
@@ -169,9 +176,11 @@ function renderTasks() {
   const todayList = document.getElementById("list-today");
   const tomorrowList = document.getElementById("list-tomorrow");
   const upcomingList = document.getElementById("list-upcoming");
+
   const todayEmpty = document.getElementById("todayEmpty");
   const tomorrowEmpty = document.getElementById("tomorrowEmpty");
   const upcomingEmpty = document.getElementById("upcomingEmpty");
+
   const todayCountEl = document.getElementById("todayCount");
   const tomorrowCountEl = document.getElementById("tomorrowCount");
   const upcomingCountEl = document.getElementById("upcomingCount");
@@ -226,7 +235,6 @@ function renderTasks() {
     const textSpan = document.createElement("span");
     textSpan.className = "task-text";
     textSpan.textContent = task.text;
-
     top.appendChild(textSpan);
 
     const meta = document.createElement("div");
@@ -242,7 +250,8 @@ function renderTasks() {
     if (task.due) {
       const dSpan = document.createElement("span");
       dSpan.className = "task-due";
-      dSpan.textContent = task.due;
+      const d = new Date(task.due);
+      dSpan.textContent = formatDateDisplay(d);
       meta.appendChild(dSpan);
     }
 
@@ -311,9 +320,80 @@ function setupThemeToggle() {
   });
 }
 
+// Settings panel
+function applySavedDateFormatToUI() {
+  const format = localStorage.getItem(DATE_FORMAT_KEY) || "mdy";
+  const chips = document.querySelectorAll(".settings-chip[data-date-format]");
+  chips.forEach((chip) => {
+    if (chip.dataset.dateFormat === format) {
+      chip.classList.add("settings-chip--active");
+    } else {
+      chip.classList.remove("settings-chip--active");
+    }
+  });
+}
+
+function applySavedThemeToSettings() {
+  const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+  const chips = document.querySelectorAll(".settings-chip[data-theme]");
+  chips.forEach((chip) => {
+    if (chip.dataset.theme === savedTheme) {
+      chip.classList.add("settings-chip--active");
+    } else {
+      chip.classList.remove("settings-chip--active");
+    }
+  });
+}
+
+function setupSettingsPanel() {
+  const themeChips = document.querySelectorAll(".settings-chip[data-theme]");
+  const formatChips = document.querySelectorAll(".settings-chip[data-date-format]");
+
+  themeChips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const theme = chip.dataset.theme;
+      const root = document.documentElement;
+      const icon = document.getElementById("themeIcon");
+      const label = document.getElementById("themeLabel");
+
+      if (theme === "light") {
+        root.classList.add("light");
+        localStorage.setItem(THEME_KEY, "light");
+        if (icon && label) {
+          icon.textContent = "☀";
+          label.textContent = "Light";
+        }
+      } else {
+        root.classList.remove("light");
+        localStorage.setItem(THEME_KEY, "dark");
+        if (icon && label) {
+          icon.textContent = "☾";
+          label.textContent = "Dark";
+        }
+      }
+      applySavedThemeToSettings();
+    });
+  });
+
+  formatChips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const format = chip.dataset.dateFormat || "mdy";
+      localStorage.setItem(DATE_FORMAT_KEY, format);
+      applySavedDateFormatToUI();
+      renderTasks();
+      const todayDisplay = document.getElementById("todayDisplay");
+      if (todayDisplay) {
+        todayDisplay.textContent = formatTodayLabel();
+      }
+    });
+  });
+
+  applySavedThemeToSettings();
+  applySavedDateFormatToUI();
+}
+
 // Init
 document.addEventListener("DOMContentLoaded", () => {
-  // Today label
   const todayDisplay = document.getElementById("todayDisplay");
   if (todayDisplay) {
     todayDisplay.textContent = formatTodayLabel();
@@ -324,16 +404,15 @@ document.addEventListener("DOMContentLoaded", () => {
   renderTasks();
   setupNotes();
   setupThemeToggle();
+  setupSettingsPanel();
 
-  // Button events
   const addClassBtn = document.getElementById("addClassBtn");
   const addTaskBtn = document.getElementById("addTaskBtn");
   const clearCompletedBtn = document.getElementById("clearCompletedBtn");
 
   if (addClassBtn) addClassBtn.addEventListener("click", addClass);
   if (addTaskBtn) addTaskBtn.addEventListener("click", addTask);
-  if (clearCompletedBtn)
-    clearCompletedBtn.addEventListener("click", clearCompleted);
+  if (clearCompletedBtn) clearCompletedBtn.addEventListener("click", clearCompleted);
 
   const taskInput = document.getElementById("taskInput");
   if (taskInput) {
