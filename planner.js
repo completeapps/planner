@@ -2,7 +2,6 @@ const STORAGE_KEY = "complete-planner-tasks-v2";
 const CLASS_KEY = "complete-planner-classes-v2";
 const NOTES_KEY = "complete-planner-notes-v2";
 const THEME_KEY = "complete-planner-theme-v2";
-const DATE_FORMAT_KEY = "complete-planner-date-format"; // "mdy" or "dmy"
 
 let tasks = [];
 let classes = [];
@@ -13,15 +12,21 @@ function formatDateISO(date) {
   return date.toISOString().slice(0, 10); // yyyy-mm-dd
 }
 
+// Use browser locale for display
 function formatDateDisplay(date) {
-  const format = localStorage.getItem(DATE_FORMAT_KEY) || "mdy";
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-  const y = date.getFullYear();
-  if (format === "dmy") {
-    return `${d}/${m}/${y}`;
+  try {
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    // Fallback
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+    const y = date.getFullYear();
+    return `${m}/${d}/${y}`;
   }
-  return `${m}/${d}/${y}`;
 }
 
 function todayStr() {
@@ -48,24 +53,14 @@ function loadState() {
     classes = [];
   }
 
-  // Theme
-  const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+  // Theme – default is light (no class); dark = html.dark
+  const savedTheme = localStorage.getItem(THEME_KEY) || "light";
   const root = document.documentElement;
-  const icon = document.getElementById("themeIcon");
-  const label = document.getElementById("themeLabel");
 
-  if (savedTheme === "light") {
-    root.classList.add("light");
-    if (icon && label) {
-      icon.textContent = "☀";
-      label.textContent = "Light";
-    }
+  if (savedTheme === "dark") {
+    root.classList.add("dark");
   } else {
-    root.classList.remove("light");
-    if (icon && label) {
-      icon.textContent = "☾";
-      label.textContent = "Dark";
-    }
+    root.classList.remove("dark");
   }
 
   // Notes
@@ -317,44 +312,9 @@ function setupNotes() {
   });
 }
 
-// Theme toggle button in header
-function setupThemeToggle() {
-  const btn = document.getElementById("themeToggle");
-  const icon = document.getElementById("themeIcon");
-  const label = document.getElementById("themeLabel");
-  if (!btn || !icon || !label) return;
-
-  btn.addEventListener("click", () => {
-    const root = document.documentElement;
-    const isLight = root.classList.toggle("light");
-    if (isLight) {
-      icon.textContent = "☀";
-      label.textContent = "Light";
-      localStorage.setItem(THEME_KEY, "light");
-    } else {
-      icon.textContent = "☾";
-      label.textContent = "Dark";
-      localStorage.setItem(THEME_KEY, "dark");
-    }
-    applySavedThemeToSettings();
-  });
-}
-
 // Settings panel helpers
-function applySavedDateFormatToUI() {
-  const format = localStorage.getItem(DATE_FORMAT_KEY) || "mdy";
-  const chips = document.querySelectorAll(".settings-chip[data-date-format]");
-  chips.forEach((chip) => {
-    if (chip.dataset.dateFormat === format) {
-      chip.classList.add("settings-chip--active");
-    } else {
-      chip.classList.remove("settings-chip--active");
-    }
-  });
-}
-
 function applySavedThemeToSettings() {
-  const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+  const savedTheme = localStorage.getItem(THEME_KEY) || "light";
   const chips = document.querySelectorAll(".settings-chip[data-theme]");
   chips.forEach((chip) => {
     if (chip.dataset.theme === savedTheme) {
@@ -385,51 +345,24 @@ function closeSettingsDrawer() {
 
 function setupSettingsPanel() {
   const themeChips = document.querySelectorAll(".settings-chip[data-theme]");
-  const formatChips = document.querySelectorAll(
-    ".settings-chip[data-date-format]"
-  );
-  const themeIcon = document.getElementById("themeIcon");
-  const themeLabel = document.getElementById("themeLabel");
 
   themeChips.forEach((chip) => {
     chip.addEventListener("click", () => {
       const theme = chip.dataset.theme;
       const root = document.documentElement;
 
-      if (theme === "light") {
-        root.classList.add("light");
-        localStorage.setItem(THEME_KEY, "light");
-        if (themeIcon && themeLabel) {
-          themeIcon.textContent = "☀";
-          themeLabel.textContent = "Light";
-        }
-      } else {
-        root.classList.remove("light");
+      if (theme === "dark") {
+        root.classList.add("dark");
         localStorage.setItem(THEME_KEY, "dark");
-        if (themeIcon && themeLabel) {
-          themeIcon.textContent = "☾";
-          themeLabel.textContent = "Dark";
-        }
+      } else {
+        root.classList.remove("dark");
+        localStorage.setItem(THEME_KEY, "light");
       }
       applySavedThemeToSettings();
     });
   });
 
-  formatChips.forEach((chip) => {
-    chip.addEventListener("click", () => {
-      const format = chip.dataset.dateFormat || "mdy";
-      localStorage.setItem(DATE_FORMAT_KEY, format);
-      applySavedDateFormatToUI();
-      renderTasks();
-      const todayDisplay = document.getElementById("todayDisplay");
-      if (todayDisplay) {
-        todayDisplay.textContent = formatTodayLabel();
-      }
-    });
-  });
-
   applySavedThemeToSettings();
-  applySavedDateFormatToUI();
 
   // Drawer open/close
   const openBtn = document.getElementById("settingsToggle");
@@ -451,7 +384,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderClasses();
   renderTasks();
   setupNotes();
-  setupThemeToggle();
   setupSettingsPanel();
 
   const addClassBtn = document.getElementById("addClassBtn");
