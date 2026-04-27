@@ -2,7 +2,21 @@
   "name": "Complete Planner",
   "short_name": "Planner",
   "start_url": "/planner/",
+  "scope": "/planner/",
   "display": "standalone",
   "background_color": "#05060a",
-  "theme_color": "#05060a"
+  "theme_color": "#05060a",
+  "description": "A calm notebook-style homework and notes planner.",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
