@@ -1,39 +1,13 @@
-const STORAGE_KEY = "complete-planner-tasks-v1";
-const CLASS_KEY = "complete-planner-classes-v1";
-const THEME_KEY = "complete-planner-theme-v1";
+const STORAGE_KEY = "complete-planner-tasks-v2";
+const CLASS_KEY = "complete-planner-classes-v2";
+const NOTES_KEY = "complete-planner-notes-v2";
+const THEME_KEY = "complete-planner-theme-v2";
 
 let tasks = [];
 let classes = [];
 let selectedClass = null;
 
-// Load
-function loadState() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const savedClasses = JSON.parse(localStorage.getItem(CLASS_KEY) || "[]");
-    const savedTheme = localStorage.getItem(THEME_KEY);
-
-    tasks = saved;
-    classes = savedClasses;
-
-    if (savedTheme === "light") {
-      document.documentElement.classList.add("light");
-      document.getElementById("themeIcon").textContent = "☀";
-      document.getElementById("themeLabel").textContent = "Light";
-    }
-  } catch (e) {
-    tasks = [];
-    classes = [];
-  }
-}
-
-// Save
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  localStorage.setItem(CLASS_KEY, JSON.stringify(classes));
-}
-
-// Helpers
+// Date helpers
 function todayStr() {
   const d = new Date();
   return d.toISOString().slice(0, 10);
@@ -45,14 +19,61 @@ function tomorrowStr() {
   return d.toISOString().slice(0, 10);
 }
 
-// Add/remove classes
+function formatTodayLabel() {
+  const d = new Date();
+  const opts = { weekday: "long", month: "short", day: "numeric" };
+  return d.toLocaleDateString(undefined, opts);
+}
+
+// Load state
+function loadState() {
+  try {
+    tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    classes = JSON.parse(localStorage.getItem(CLASS_KEY) || "[]");
+  } catch {
+    tasks = [];
+    classes = [];
+  }
+
+  // Theme
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  if (savedTheme === "light") {
+    document.documentElement.classList.add("light");
+    const icon = document.getElementById("themeIcon");
+    const label = document.getElementById("themeLabel");
+    if (icon && label) {
+      icon.textContent = "☀";
+      label.textContent = "Light";
+    }
+  }
+
+  // Notes
+  const savedNotes = localStorage.getItem(NOTES_KEY);
+  const notesArea = document.getElementById("notesArea");
+  if (notesArea && savedNotes != null) {
+    notesArea.value = savedNotes;
+  }
+}
+
+// Save state
+function saveTasks() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+}
+
+function saveClasses() {
+  localStorage.setItem(CLASS_KEY, JSON.stringify(classes));
+}
+
+// Classes
 function addClass() {
   const input = document.getElementById("classInput");
+  if (!input) return;
   const name = input.value.trim();
   if (!name) return;
+
   if (!classes.includes(name)) {
     classes.push(name);
-    saveState();
+    saveClasses();
     renderClasses();
   }
   input.value = "";
@@ -65,37 +86,58 @@ function selectClass(name) {
 }
 
 function renderClasses() {
-  const container = document.getElementById("classChips");
-  container.innerHTML = "";
+  const chips = document.getElementById("classChips");
+  const select = document.getElementById("classSelect");
+  if (!chips || !select) return;
+
+  chips.innerHTML = "";
+  select.innerHTML = "";
+  const optNone = document.createElement("option");
+  optNone.value = "";
+  optNone.textContent = "No class";
+  select.appendChild(optNone);
+
   classes.forEach((name) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "class-chip" + (selectedClass === name ? " class-chip--active" : "");
-    btn.textContent = name;
-    btn.onclick = () => selectClass(name);
-    container.appendChild(btn);
+    // chip
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className =
+      "class-chip" + (selectedClass === name ? " class-chip--active" : "");
+    chip.textContent = name;
+    chip.onclick = () => selectClass(name);
+    chips.appendChild(chip);
+
+    // select option
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
   });
 }
 
-// Task ops
+// Tasks
 function addTask() {
   const textInput = document.getElementById("taskInput");
   const dueInput = document.getElementById("dueInput");
-  const text = textInput.value.trim();
-  const dueDate = dueInput.value || null;
+  const classSelect = document.getElementById("classSelect");
+  if (!textInput || !dueInput || !classSelect) return;
 
+  const text = textInput.value.trim();
   if (!text) return;
+
+  const due = dueInput.value || null;
+  const className = classSelect.value || null;
 
   tasks.push({
     id: Date.now(),
     text,
-    due: dueDate,
-    done: false,
-    className: selectedClass
+    due,
+    className,
+    done: false
   });
 
   textInput.value = "";
-  saveState();
+  saveTasks();
   renderTasks();
 }
 
@@ -103,28 +145,52 @@ function toggleTask(id) {
   tasks = tasks.map((t) =>
     t.id === id ? { ...t, done: !t.done } : t
   );
-  saveState();
+  saveTasks();
   renderTasks();
 }
 
 function clearCompleted() {
   tasks = tasks.filter((t) => !t.done);
-  saveState();
+  saveTasks();
   renderTasks();
 }
 
-// Rendering
+function isOverdue(task) {
+  if (!task.due) return false;
+  if (task.done) return false;
+  const today = todayStr();
+  return task.due < today;
+}
+
 function renderTasks() {
   const today = todayStr();
   const tomorrow = tomorrowStr();
 
-  const listToday = document.getElementById("list-today");
-  const listTomorrow = document.getElementById("list-tomorrow");
-  const listUpcoming = document.getElementById("list-upcoming");
+  const todayList = document.getElementById("list-today");
+  const tomorrowList = document.getElementById("list-tomorrow");
+  const upcomingList = document.getElementById("list-upcoming");
+  const todayEmpty = document.getElementById("todayEmpty");
+  const tomorrowEmpty = document.getElementById("tomorrowEmpty");
+  const upcomingEmpty = document.getElementById("upcomingEmpty");
+  const todayCountEl = document.getElementById("todayCount");
+  const tomorrowCountEl = document.getElementById("tomorrowCount");
+  const upcomingCountEl = document.getElementById("upcomingCount");
+  const totalCountEl = document.getElementById("taskCount");
 
-  listToday.innerHTML = "";
-  listTomorrow.innerHTML = "";
-  listUpcoming.innerHTML = "";
+  if (
+    !todayList ||
+    !tomorrowList ||
+    !upcomingList ||
+    !todayEmpty ||
+    !tomorrowEmpty ||
+    !upcomingEmpty
+  ) {
+    return;
+  }
+
+  todayList.innerHTML = "";
+  tomorrowList.innerHTML = "";
+  upcomingList.innerHTML = "";
 
   let todayCount = 0;
   let tomorrowCount = 0;
@@ -136,13 +202,18 @@ function renderTasks() {
 
   filtered.forEach((task) => {
     const li = document.createElement("li");
-    li.className = "task" + (task.done ? " task--done" : "");
+    const overdue = isOverdue(task);
+    li.className =
+      "task" +
+      (task.done ? " task--done" : "") +
+      (overdue ? " task--overdue" : "");
 
     const label = document.createElement("label");
     label.className = "task-main";
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
+    checkbox.className = "task-checkbox";
     checkbox.checked = task.done;
     checkbox.onchange = () => toggleTask(task.id);
 
@@ -169,10 +240,10 @@ function renderTasks() {
     }
 
     if (task.due) {
-      const dueSpan = document.createElement("span");
-      dueSpan.className = "task-due";
-      dueSpan.textContent = task.due;
-      meta.appendChild(dueSpan);
+      const dSpan = document.createElement("span");
+      dSpan.className = "task-due";
+      dSpan.textContent = task.due;
+      meta.appendChild(dSpan);
     }
 
     body.appendChild(top);
@@ -184,23 +255,38 @@ function renderTasks() {
     label.appendChild(body);
     li.appendChild(label);
 
-    // section
+    // Decide which section
     if (task.due === today) {
-      listToday.appendChild(li);
+      todayList.appendChild(li);
       todayCount++;
     } else if (task.due === tomorrow) {
-      listTomorrow.appendChild(li);
+      tomorrowList.appendChild(li);
       tomorrowCount++;
     } else {
-      listUpcoming.appendChild(li);
+      upcomingList.appendChild(li);
       upcomingCount++;
     }
   });
 
-  document.getElementById("todayCount").textContent = todayCount;
-  document.getElementById("tomorrowCount").textContent = tomorrowCount;
-  document.getElementById("upcomingCount").textContent = upcomingCount;
-  document.getElementById("taskCount").textContent = tasks.length;
+  // Counts
+  if (todayCountEl) todayCountEl.textContent = todayCount;
+  if (tomorrowCountEl) tomorrowCountEl.textContent = tomorrowCount;
+  if (upcomingCountEl) upcomingCountEl.textContent = upcomingCount;
+  if (totalCountEl) totalCountEl.textContent = tasks.length;
+
+  // Empty states
+  todayEmpty.style.display = todayCount === 0 ? "block" : "none";
+  tomorrowEmpty.style.display = tomorrowCount === 0 ? "block" : "none";
+  upcomingEmpty.style.display = upcomingCount === 0 ? "block" : "none";
+}
+
+// Notes
+function setupNotes() {
+  const notesArea = document.getElementById("notesArea");
+  if (!notesArea) return;
+  notesArea.addEventListener("input", () => {
+    localStorage.setItem(NOTES_KEY, notesArea.value);
+  });
 }
 
 // Theme toggle
@@ -208,6 +294,7 @@ function setupThemeToggle() {
   const btn = document.getElementById("themeToggle");
   const icon = document.getElementById("themeIcon");
   const label = document.getElementById("themeLabel");
+  if (!btn || !icon || !label) return;
 
   btn.addEventListener("click", () => {
     const root = document.documentElement;
@@ -226,8 +313,34 @@ function setupThemeToggle() {
 
 // Init
 document.addEventListener("DOMContentLoaded", () => {
+  // Today label
+  const todayDisplay = document.getElementById("todayDisplay");
+  if (todayDisplay) {
+    todayDisplay.textContent = formatTodayLabel();
+  }
+
   loadState();
   renderClasses();
   renderTasks();
+  setupNotes();
   setupThemeToggle();
+
+  // Button events
+  const addClassBtn = document.getElementById("addClassBtn");
+  const addTaskBtn = document.getElementById("addTaskBtn");
+  const clearCompletedBtn = document.getElementById("clearCompletedBtn");
+
+  if (addClassBtn) addClassBtn.addEventListener("click", addClass);
+  if (addTaskBtn) addTaskBtn.addEventListener("click", addTask);
+  if (clearCompletedBtn)
+    clearCompletedBtn.addEventListener("click", clearCompleted);
+
+  const taskInput = document.getElementById("taskInput");
+  if (taskInput) {
+    taskInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        addTask();
+      }
+    });
+  }
 });
