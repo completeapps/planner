@@ -18,7 +18,6 @@ function formatDateDisplay(date) {
   const m = date.getMonth() + 1;
   const d = date.getDate();
   const y = date.getFullYear();
-
   if (format === "dmy") {
     return `${d}/${m}/${y}`;
   }
@@ -50,14 +49,22 @@ function loadState() {
   }
 
   // Theme
-  const savedTheme = localStorage.getItem(THEME_KEY);
+  const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+  const root = document.documentElement;
+  const icon = document.getElementById("themeIcon");
+  const label = document.getElementById("themeLabel");
+
   if (savedTheme === "light") {
-    document.documentElement.classList.add("light");
-    const icon = document.getElementById("themeIcon");
-    const label = document.getElementById("themeLabel");
+    root.classList.add("light");
     if (icon && label) {
       icon.textContent = "☀";
       label.textContent = "Light";
+    }
+  } else {
+    root.classList.remove("light");
+    if (icon && label) {
+      icon.textContent = "☾";
+      label.textContent = "Dark";
     }
   }
 
@@ -73,7 +80,6 @@ function loadState() {
 function saveTasks() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
 }
-
 function saveClasses() {
   localStorage.setItem(CLASS_KEY, JSON.stringify(classes));
 }
@@ -139,10 +145,17 @@ function addTask() {
   const text = textInput.value.trim();
   if (!text) return;
 
-  const due = dueInput.value || null; // yyyy-mm-dd from <input type="date">
+  const due = dueInput.value || null; // yyyy-mm-dd
   const className = classSelect.value || null;
 
-  tasks.push({ id: Date.now(), text, due, className, done: false });
+  tasks.push({
+    id: Date.now(),
+    text,
+    due,
+    className,
+    done: false,
+  });
+
   textInput.value = "";
   saveTasks();
   renderTasks();
@@ -150,7 +163,12 @@ function addTask() {
 
 function toggleTask(id) {
   tasks = tasks.map((t) =>
-    t.id === id ? { ...t, done: !t.done } : t
+    t.id === id
+      ? {
+          ...t,
+          done: !t.done,
+        }
+      : t
   );
   saveTasks();
   renderTasks();
@@ -235,6 +253,7 @@ function renderTasks() {
     const textSpan = document.createElement("span");
     textSpan.className = "task-text";
     textSpan.textContent = task.text;
+
     top.appendChild(textSpan);
 
     const meta = document.createElement("div");
@@ -298,7 +317,7 @@ function setupNotes() {
   });
 }
 
-// Theme toggle
+// Theme toggle button in header
 function setupThemeToggle() {
   const btn = document.getElementById("themeToggle");
   const icon = document.getElementById("themeIcon");
@@ -317,10 +336,11 @@ function setupThemeToggle() {
       label.textContent = "Dark";
       localStorage.setItem(THEME_KEY, "dark");
     }
+    applySavedThemeToSettings();
   });
 }
 
-// Settings panel
+// Settings panel helpers
 function applySavedDateFormatToUI() {
   const format = localStorage.getItem(DATE_FORMAT_KEY) || "mdy";
   const chips = document.querySelectorAll(".settings-chip[data-date-format]");
@@ -345,30 +365,50 @@ function applySavedThemeToSettings() {
   });
 }
 
+function openSettingsDrawer() {
+  const drawer = document.getElementById("settingsDrawer");
+  const backdrop = document.getElementById("settingsBackdrop");
+  if (!drawer || !backdrop) return;
+  drawer.classList.add("open");
+  drawer.setAttribute("aria-hidden", "false");
+  backdrop.classList.add("visible");
+}
+
+function closeSettingsDrawer() {
+  const drawer = document.getElementById("settingsDrawer");
+  const backdrop = document.getElementById("settingsBackdrop");
+  if (!drawer || !backdrop) return;
+  drawer.classList.remove("open");
+  drawer.setAttribute("aria-hidden", "true");
+  backdrop.classList.remove("visible");
+}
+
 function setupSettingsPanel() {
   const themeChips = document.querySelectorAll(".settings-chip[data-theme]");
-  const formatChips = document.querySelectorAll(".settings-chip[data-date-format]");
+  const formatChips = document.querySelectorAll(
+    ".settings-chip[data-date-format]"
+  );
+  const themeIcon = document.getElementById("themeIcon");
+  const themeLabel = document.getElementById("themeLabel");
 
   themeChips.forEach((chip) => {
     chip.addEventListener("click", () => {
       const theme = chip.dataset.theme;
       const root = document.documentElement;
-      const icon = document.getElementById("themeIcon");
-      const label = document.getElementById("themeLabel");
 
       if (theme === "light") {
         root.classList.add("light");
         localStorage.setItem(THEME_KEY, "light");
-        if (icon && label) {
-          icon.textContent = "☀";
-          label.textContent = "Light";
+        if (themeIcon && themeLabel) {
+          themeIcon.textContent = "☀";
+          themeLabel.textContent = "Light";
         }
       } else {
         root.classList.remove("light");
         localStorage.setItem(THEME_KEY, "dark");
-        if (icon && label) {
-          icon.textContent = "☾";
-          label.textContent = "Dark";
+        if (themeIcon && themeLabel) {
+          themeIcon.textContent = "☾";
+          themeLabel.textContent = "Dark";
         }
       }
       applySavedThemeToSettings();
@@ -390,6 +430,14 @@ function setupSettingsPanel() {
 
   applySavedThemeToSettings();
   applySavedDateFormatToUI();
+
+  // Drawer open/close
+  const openBtn = document.getElementById("settingsToggle");
+  const closeBtn = document.getElementById("settingsClose");
+  const backdrop = document.getElementById("settingsBackdrop");
+  openBtn?.addEventListener("click", openSettingsDrawer);
+  closeBtn?.addEventListener("click", closeSettingsDrawer);
+  backdrop?.addEventListener("click", closeSettingsDrawer);
 }
 
 // Init
@@ -412,7 +460,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (addClassBtn) addClassBtn.addEventListener("click", addClass);
   if (addTaskBtn) addTaskBtn.addEventListener("click", addTask);
-  if (clearCompletedBtn) clearCompletedBtn.addEventListener("click", clearCompleted);
+  if (clearCompletedBtn)
+    clearCompletedBtn.addEventListener("click", clearCompleted);
 
   const taskInput = document.getElementById("taskInput");
   if (taskInput) {
