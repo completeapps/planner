@@ -1,221 +1,300 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Complete Planner</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <link rel="stylesheet" href="planner.css">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#05060a">
-</head>
-<body>
-  <div class="app">
-    <div class="shell">
-      <header class="header">
-        <div class="title-block">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Complete Planner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="planner.css" />
+  </head>
+  <body>
+    <div class="app">
+      <div class="shell">
+        <!-- Top bar -->
+        <header class="header">
           <div class="title-row">
             <div class="app-dot"></div>
-            <h1>Complete Planner</h1>
-          </div>
-          <span class="subtitle">Notebook-style homework and notes in one calm view.</span>
-        </div>
-
-        <div class="header-right">
-          <button id="themeToggle" class="theme-toggle" type="button">
-            <span id="themeIcon">☾</span>
-            <span id="themeLabel">Dark</span>
-          </button>
-          <span id="userLabel" class="user-label"></span>
-          <button id="authBtn" class="auth-btn" type="button">Sign in</button>
-        </div>
-      </header>
-
-      <!-- Settings panel -->
-      <section class="settings-panel" id="settingsPanel">
-        <div class="settings-row">
-          <div class="settings-group">
-            <div class="settings-label">Theme</div>
-            <div class="settings-options">
-              <button type="button" class="settings-chip" data-theme="dark">Dark</button>
-              <button type="button" class="settings-chip" data-theme="light">Light</button>
+            <div>
+              <h1>Complete Planner</h1>
+              <span class="subtitle">
+                Notebook-style homework and notes in one calm view.
+              </span>
             </div>
           </div>
-          <div class="settings-group">
-            <div class="settings-label">Date format</div>
-            <div class="settings-options">
-              <button type="button" class="settings-chip" data-date-format="mdy">m/d/yyyy</button>
-              <button type="button" class="settings-chip" data-date-format="dmy">d/m/yyyy</button>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <main class="main-layout">
-        <!-- Left column: tasks / notebook -->
-        <section class="notebook">
-          <div class="notebook-rings"></div>
-          <div class="notebook-inner">
-            <div class="notebook-header">
-              <div class="nh-left">
-                <span class="nh-label">Today</span>
-                <span class="nh-date" id="todayDisplay"></span>
-              </div>
-              <div class="nh-right">
-                <span class="nh-counter"><span id="taskCount">0</span> tasks</span>
-              </div>
-            </div>
-
-            <!-- Add task row -->
-            <div class="task-input-row">
-              <input
-                id="taskInput"
-                type="text"
-                class="task-input"
-                placeholder="Write a new task…"
-                autocomplete="off"
-              />
-              <input id="dueInput" type="date" class="task-date" />
-              <select id="classSelect" class="task-class-select">
-                <option value="">No class</option>
-              </select>
-              <button class="add-btn" type="button" id="addTaskBtn">Add</button>
-            </div>
-
-            <!-- Class chips + add class -->
-            <div class="class-bar">
-              <div class="class-chips" id="classChips"></div>
-              <div class="class-add-row">
-                <input
-                  id="classInput"
-                  class="class-input"
-                  type="text"
-                  placeholder="Add a class (Algebra, English…)"
-                />
-                <button class="class-add-btn" type="button" id="addClassBtn">+ Class</button>
-              </div>
-            </div>
-
-            <!-- Task sections -->
-            <div class="sections">
-              <section class="section">
-                <div class="section-header">
-                  <span>Today</span>
-                  <span><span id="todayCount">0</span> due</span>
-                </div>
-                <ul id="list-today" class="task-list"></ul>
-                <p class="section-empty" id="todayEmpty">Nothing due today.</p>
-              </section>
-
-              <section class="section">
-                <div class="section-header">
-                  <span>Tomorrow</span>
-                  <span><span id="tomorrowCount">0</span> due</span>
-                </div>
-                <ul id="list-tomorrow" class="task-list"></ul>
-                <p class="section-empty" id="tomorrowEmpty">Tomorrow is clear.</p>
-              </section>
-
-              <section class="section">
-                <div class="section-header">
-                  <span>Upcoming</span>
-                  <span><span id="upcomingCount">0</span> tasks</span>
-                </div>
-                <ul id="list-upcoming" class="task-list"></ul>
-                <p class="section-empty" id="upcomingEmpty">No upcoming tasks yet.</p>
-              </section>
-            </div>
-
-            <div class="notebook-footer">
-              <button class="clear-btn" type="button" id="clearCompletedBtn">
-                Clear completed
+          <div class="header-right">
+            <div class="auth-cluster">
+              <span id="userLabel" class="user-label">Not signed in</span>
+              <button id="authBtn" class="auth-btn" type="button">
+                Sign in
               </button>
-              <span class="hint-text">Overdue tasks glow red so you can’t ignore them.</span>
             </div>
-          </div>
-        </section>
 
-        <!-- Right column: notes -->
-        <aside class="notes-panel">
-          <div class="notes-header">
-            <span class="notes-title">Notes</span>
-            <span class="notes-tagline">Quick thoughts for today.</span>
+            <!-- Compact theme button visible on wider screens, mirrors settings -->
+            <button id="themeToggle" class="theme-toggle" type="button">
+              <span id="themeIcon">☾</span>
+              <span id="themeLabel">Dark</span>
+            </button>
+
+            <!-- Settings drawer toggle (always visible on mobile) -->
+            <button id="settingsToggle" class="settings-toggle" type="button" aria-label="Open settings">
+              ☰
+            </button>
           </div>
-          <textarea
-            id="notesArea"
-            class="notes-area"
-            placeholder="Write anything you want to remember…"
-          ></textarea>
-          <p class="notes-hint">Notes save automatically in this browser.</p>
-        </aside>
-      </main>
+        </header>
+
+        <!-- Main layout: notebook + notes -->
+        <main class="main-layout">
+          <!-- Notebook panel -->
+          <section class="notebook">
+            <div class="notebook-rings"></div>
+            <div class="notebook-inner">
+              <div class="notebook-header">
+                <div class="nh-left">
+                  <span class="nh-label">Today</span>
+                  <span id="todayDisplay" class="nh-date"></span>
+                </div>
+                <div class="nh-right">
+                  <span id="taskCount" class="nh-counter">0</span> tasks
+                </div>
+              </div>
+
+              <!-- Task input -->
+              <div class="task-input-row">
+                <input
+                  id="taskInput"
+                  type="text"
+                  class="task-input"
+                  placeholder="Write a new task…"
+                  autocomplete="off"
+                />
+                <input
+                  id="dueInput"
+                  type="date"
+                  class="task-date"
+                />
+                <select id="classSelect" class="task-class-select">
+                  <option value="">No class</option>
+                </select>
+                <button id="addTaskBtn" class="add-btn" type="button">
+                  Add
+                </button>
+              </div>
+
+              <!-- Classes -->
+              <div class="class-bar">
+                <div class="class-chips" id="classChips"></div>
+                <div class="class-add-row">
+                  <input
+                    id="classInput"
+                    class="class-input"
+                    type="text"
+                    placeholder="Add a class (Algebra, English…)"
+                  />
+                  <button id="addClassBtn" class="class-add-btn" type="button">
+                    + Class
+                  </button>
+                </div>
+              </div>
+
+              <!-- Sections -->
+              <div class="sections">
+                <section class="section">
+                  <div class="section-header">
+                    <span>Today</span>
+                    <span><span id="todayCount">0</span> due</span>
+                  </div>
+                  <ul id="list-today" class="task-list"></ul>
+                  <p id="todayEmpty" class="section-empty">
+                    Nothing due today.
+                  </p>
+                </section>
+
+                <section class="section">
+                  <div class="section-header">
+                    <span>Tomorrow</span>
+                    <span><span id="tomorrowCount">0</span> due</span>
+                  </div>
+                  <ul id="list-tomorrow" class="task-list"></ul>
+                  <p id="tomorrowEmpty" class="section-empty">
+                    Tomorrow is clear.
+                  </p>
+                </section>
+
+                <section class="section">
+                  <div class="section-header">
+                    <span>Upcoming</span>
+                    <span><span id="upcomingCount">0</span> tasks</span>
+                  </div>
+                  <ul id="list-upcoming" class="task-list"></ul>
+                  <p id="upcomingEmpty" class="section-empty">
+                    No upcoming tasks yet.
+                  </p>
+                </section>
+              </div>
+
+              <!-- Footer -->
+              <div class="notebook-footer">
+                <button
+                  id="clearCompletedBtn"
+                  class="clear-btn"
+                  type="button"
+                >
+                  Clear completed
+                </button>
+                <span class="hint-text">
+                  Overdue tasks glow red so you can’t ignore them.
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Notes panel -->
+          <section class="notes-panel">
+            <header class="notes-header">
+              <span class="notes-title">Notes</span>
+              <span class="notes-tagline">
+                Quick thoughts for today.
+              </span>
+            </header>
+            <textarea
+              id="notesArea"
+              class="notes-area"
+              placeholder="Type anything you want to remember…"
+            ></textarea>
+            <p class="notes-hint">
+              Notes save automatically in this browser.
+            </p>
+          </section>
+        </main>
+      </div>
     </div>
-  </div>
 
-  <script src="planner.js"></script>
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").catch((err) => {
-        console.error("Service worker registration failed", err);
+    <!-- Slide-in settings drawer -->
+    <aside class="settings-drawer" id="settingsDrawer" aria-hidden="true">
+      <div class="settings-drawer-inner">
+        <div class="settings-drawer-header">
+          <h2>Settings</h2>
+          <button
+            id="settingsClose"
+            class="settings-close"
+            type="button"
+            aria-label="Close settings"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-label">Theme</div>
+          <div class="settings-options">
+            <button
+              class="settings-chip"
+              data-theme="dark"
+              type="button"
+            >
+              Dark
+            </button>
+            <button
+              class="settings-chip"
+              data-theme="light"
+              type="button"
+            >
+              Light
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-label">Date format</div>
+          <div class="settings-options">
+            <button
+              class="settings-chip"
+              data-date-format="mdy"
+              type="button"
+            >
+              m/d/yyyy
+            </button>
+            <button
+              class="settings-chip"
+              data-date-format="dmy"
+              type="button"
+            >
+              d/m/yyyy
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Backdrop for drawer -->
+    <div class="settings-backdrop" id="settingsBackdrop"></div>
+
+    <script type="module">
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("sw.js")
+          .catch((err) => {
+            console.error("Service worker registration failed", err);
+          });
+      }
+
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+        GoogleAuthProvider,
+        signInWithPopup,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyB2n9yF-y2tx9CPalnFVVP1esgQmXqf9Hw",
+        authDomain: "complete-575d8.firebaseapp.com",
+        projectId: "complete-575d8",
+        storageBucket: "complete-575d8.firebasestorage.app",
+        messagingSenderId: "386287269951",
+        appId: "1:386287269951:web:fe62fed163c0735aa3a08a",
+        measurementId: "G-KBDDB2953K",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
+
+      const userLabel = document.getElementById("userLabel");
+      const authBtn = document.getElementById("authBtn");
+
+      onAuthStateChanged(auth, (user) => {
+        if (!userLabel || !authBtn) return;
+        if (user) {
+          userLabel.textContent =
+            user.displayName || user.email || "Signed in";
+          authBtn.textContent = "Sign out";
+        } else {
+          userLabel.textContent = "Not signed in";
+          authBtn.textContent = "Sign in";
+        }
       });
-    }
-  </script>
 
-  <!-- Firebase Auth for Google sign-in -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      GoogleAuthProvider,
-      signInWithPopup,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyB2n9yF-y2tx9CPalnFVVP1esgQmXqf9Hw",
-      authDomain: "complete-575d8.firebaseapp.com",
-      projectId: "complete-575d8",
-      storageBucket: "complete-575d8.firebasestorage.app",
-      messagingSenderId: "386287269951",
-      appId: "1:386287269951:web:fe62fed163c0735aa3a08a",
-      measurementId: "G-KBDDB2953K"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-
-    const userLabel = document.getElementById("userLabel");
-    const authBtn = document.getElementById("authBtn");
-
-    onAuthStateChanged(auth, (user) => {
-      if (!userLabel || !authBtn) return;
-      if (user) {
-        userLabel.textContent = user.displayName || user.email || "Signed in";
-        authBtn.textContent = "Sign out";
-      } else {
-        userLabel.textContent = "Not signed in";
-        authBtn.textContent = "Sign in";
-      }
-    });
-
-    authBtn?.addEventListener("click", async () => {
-      const user = auth.currentUser;
-      if (!user) {
-        try {
-          await signInWithPopup(auth, provider);
-        } catch (err) {
-          console.error("Sign-in failed", err);
+      authBtn?.addEventListener("click", async () => {
+        const user = auth.currentUser;
+        if (!user) {
+          try {
+            await signInWithPopup(auth, provider);
+          } catch (err) {
+            console.error("Sign-in failed", err);
+          }
+        } else {
+          try {
+            await signOut(auth);
+          } catch (err) {
+            console.error("Sign-out failed", err);
+          }
         }
-      } else {
-        try {
-          await signOut(auth);
-        } catch (err) {
-          console.error("Sign-out failed", err);
-        }
-      }
-    });
-  </script>
-</body>
+      });
+    </script>
+
+    <script src="planner.js"></script>
+  </body>
 </html>
