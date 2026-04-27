@@ -11,20 +11,93 @@
 </head>
 <body>
   <div class="app">
-    <header class="app-header">
-      <h1 class="app-title">Complete Planner</h1>
-      <p class="app-subtitle">A calm place to keep track of your homework.</p>
-    </header>
+    <div class="shell">
+      <header class="header">
+        <div class="title-block">
+          <div class="title-row">
+            <div class="app-dot"></div>
+            <h1>Complete Planner</h1>
+          </div>
+          <span class="subtitle">A calm place to keep track of your homework.</span>
+        </div>
 
-    <main id="planner-root">
-      <!-- Put your planner UI here.
-           For now, just a placeholder so you see something. -->
-      <p>Planner UI goes here. Add your inputs, lists, and buttons.</p>
-    </main>
+        <div class="header-right">
+          <button id="themeToggle" class="theme-toggle" type="button">
+            <span id="themeIcon">☾</span>
+            <span id="themeLabel">Dark</span>
+          </button>
+        </div>
+      </header>
 
-    <footer class="app-footer">
-      <p>Built with Complete. Keep your school life in one place.</p>
-    </footer>
+      <section class="input-card">
+        <div class="meta-row">
+          <div class="meta-left">
+            <span class="meta-em" id="taskCount">0</span> tasks total
+          </div>
+          <button class="clear-btn" type="button" onclick="clearCompleted()">Clear completed</button>
+        </div>
+
+        <p class="input-label">Add a task</p>
+        <div class="input-row">
+          <div class="top-row">
+            <input
+              id="taskInput"
+              type="text"
+              placeholder="Type homework, project, or reminder…"
+              autocomplete="off"
+            />
+            <input id="dueInput" type="date" />
+            <button class="add-btn" type="button" onclick="addTask()">Add</button>
+          </div>
+
+          <div class="class-bar">
+            <div class="class-chips" id="classChips"></div>
+            <div class="class-add-row">
+              <input
+                id="classInput"
+                class="class-input"
+                type="text"
+                placeholder="Add a class (e.g., Algebra, English)…"
+              />
+              <button class="class-add-btn" type="button" onclick="addClass()">+ Add class</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="list-card">
+        <div class="section">
+          <div class="section-header">
+            <span>Today</span>
+            <span><span id="todayCount">0</span> due</span>
+          </div>
+          <ul id="list-today"></ul>
+          <p class="section-empty">Nothing due today. Good time to get ahead.</p>
+        </div>
+
+        <div class="section">
+          <div class="section-header">
+            <span>Tomorrow</span>
+            <span><span id="tomorrowCount">0</span> due</span>
+          </div>
+          <ul id="list-tomorrow"></ul>
+          <p class="section-empty">Tomorrow is clear for now.</p>
+        </div>
+
+        <div class="section">
+          <div class="section-header">
+            <span>Upcoming</span>
+            <span><span id="upcomingCount">0</span> tasks</span>
+          </div>
+          <ul id="list-upcoming"></ul>
+          <p class="section-empty">No upcoming tasks yet.</p>
+        </div>
+      </section>
+
+      <p class="footer-hint">
+        Overdue tasks glow red so you can’t ignore them.
+      </p>
+    </div>
   </div>
 
   <script src="planner.js"></script>
